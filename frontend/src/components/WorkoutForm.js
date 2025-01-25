@@ -1,4 +1,3 @@
-
 import { useState } from 'react'
 import { useWorkoutsContext } from '../hooks/useWorkoutsContext'
 
@@ -16,7 +15,7 @@ const WorkoutForm = () => {
 
     const workout = {title, load, reps}
     
-    const response = await fetch('/api/workouts', {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/api/workouts`, {
       method: 'POST',
       body: JSON.stringify(workout),
       headers: {
@@ -30,11 +29,11 @@ const WorkoutForm = () => {
       setEmptyFields(json.emptyFields)
     }
     if (response.ok) {
+      setEmptyFields([])
       setError(null)
       setTitle('')
       setLoad('')
       setReps('')
-      setEmptyFields([])
       dispatch({type: 'CREATE_WORKOUT', payload: json})
     }
 
@@ -44,7 +43,7 @@ const WorkoutForm = () => {
     <form className="create" onSubmit={handleSubmit}> 
       <h3>Add a New Workout</h3>
 
-      <label>Excersize Title:</label>
+      <label>Exercise Title:</label>
       <input 
         type="text" 
         onChange={(e) => setTitle(e.target.value)} 
@@ -64,7 +63,7 @@ const WorkoutForm = () => {
       <input 
         type="number" 
         onChange={(e) => setReps(e.target.value)} 
-        value={reps} 
+        value={reps}
         className={emptyFields.includes('reps') ? 'error' : ''}
       />
 

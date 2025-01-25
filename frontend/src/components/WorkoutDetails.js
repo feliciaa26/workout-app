@@ -1,13 +1,20 @@
+import { useState } from 'react'
 import { useWorkoutsContext } from '../hooks/useWorkoutsContext'
 
-//date fns
-import formateDistanceToNow, { formatDistanceToNow } from 'date-fns/formatDistanceToNow'
+// date fns
+import formatDistanceToNow from 'date-fns/formatDistanceToNow'
 
 const WorkoutDetails = ({ workout }) => {
   const { dispatch } = useWorkoutsContext()
+  const [isEditing, setIsEditing] = useState(false)
+  const [formData, setFormData] = useState({
+    title: workout.title,
+    load: workout.load,
+    reps: workout.reps
+  })
 
-  const handleClick = async () => {
-    const response = await fetch('/api/workouts/' + workout._id, {
+  const handleDelete = async () => {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/api/workouts/${workout._id}`, {
       method: 'DELETE'
     })
     const json = await response.json()
@@ -17,13 +24,58 @@ const WorkoutDetails = ({ workout }) => {
     }
   }
 
+  const handleEditToggle = () => {
+    setIsEditing(!isEditing)
+  }
+
+  const handleUpdate = async () => {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/api/workouts/${workout._id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData),
+    })
+    const json = await response.json()
+  
+    if (response.ok) {
+      dispatch({ type: 'UPDATE_WORKOUT', payload: json }) 
+      setIsEditing(false)
+    }
+  }
+
   return (
     <div className="workout-details">
-      <h4>{workout.title}</h4>
-      <p><strong>Load (kg): </strong>{workout.load}</p>
-      <p><strong>Number of reps: </strong>{workout.reps}</p>
-      <p>{formatDistanceToNow(new Date(workout.createdAt), {addSuffix: true})}</p>
-      <span className="material-symbols-outlined" onClick={handleClick}>delete</span>
+      {isEditing ? (
+        <div>
+          <input
+            type="text"
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+          />
+          <input
+            type="number"
+            value={formData.load}
+            onChange={(e) => setFormData({ ...formData, load: e.target.value })}
+          />
+          <input
+            type="number"
+            value={formData.reps}
+            onChange={(e) => setFormData({ ...formData, reps: e.target.value })}
+          />
+          <button onClick={handleUpdate}>Update</button>
+          <button onClick={handleEditToggle}>Cancel</button>
+        </div>
+      ) : (
+        <div>
+          <h4>{workout.title}</h4>
+          <p><strong>Load (kg): </strong>{workout.load}</p>
+          <p><strong>Number of reps: </strong>{workout.reps}</p>
+          <p>{formatDistanceToNow(new Date(workout.createdAt), { addSuffix: true })}</p>
+          <button onClick={handleEditToggle}>Edit</button>
+          <span className="material-symbols-outlined" onClick={handleDelete}>delete</span>
+        </div>
+      )}
     </div>
   )
 }
